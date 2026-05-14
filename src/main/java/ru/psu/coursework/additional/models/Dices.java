@@ -15,13 +15,16 @@ public class Dices implements Serializable {
         generator = new Random();
     }
 
+    public boolean isDouble = false;
 
     public void roll(){
         diceOne = generator.nextInt(6) + 1;
         diceTwo = generator.nextInt(6) + 1;
 
-        if (diceOne == diceTwo)
+        if (diceOne == diceTwo) {
             diceOneUses = diceTwoUses = 2;
+            isDouble = true;
+        }
         else
             diceOneUses = diceTwoUses = 1;
 
