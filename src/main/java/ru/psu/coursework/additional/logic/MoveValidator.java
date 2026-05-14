@@ -155,7 +155,7 @@ public class MoveValidator {
         return true;
     }
 
-    private boolean canRemoveFromBoard(Board board, int playersColor, int from, int diceValue) {
+    public boolean canRemoveFromBoard(Board board, int playersColor, int from, int diceValue) {
         if (!areAllPiecesOnHouse(board, playersColor)) return false;
 
         Cell cell = board.getCell(from);
