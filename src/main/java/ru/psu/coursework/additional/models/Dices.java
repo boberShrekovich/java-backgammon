@@ -1,6 +1,8 @@
 package ru.psu.coursework.additional.models;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Dices implements Serializable {
@@ -65,5 +67,17 @@ public class Dices implements Serializable {
 
     public int getDiceTwo(){
         return diceTwo;
+    }
+
+    public List<Integer> getAvailableValues() {
+        List<Integer> available= new ArrayList<>();
+
+        for (int i = 0; i < diceOneUses; i++)
+            available.add(diceOne);
+
+        for (int i = 0; i < diceTwoUses; i++)
+            available.add(diceTwo);
+
+        return available;
     }
 }
