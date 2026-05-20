@@ -1,16 +1,20 @@
 package ru.psu.coursework.client.ui;
 
+import ru.psu.coursework.additional.messaging.Commands;
+import ru.psu.coursework.additional.messaging.Message;
 import ru.psu.coursework.additional.models.Board;
 import ru.psu.coursework.additional.models.Cell;
 import ru.psu.coursework.additional.models.Dices;
+import ru.psu.coursework.client.network.ClientConnection;
 
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Mainframe extends javax.swing.JFrame {
+public class Mainframe extends javax.swing.JPanel {
 
     private javax.swing.JButton jButtonRoll;
     private javax.swing.JLabel jLabelBlack;
@@ -22,21 +26,36 @@ public class Mainframe extends javax.swing.JFrame {
     private javax.swing.JLabel jLabelWhiteScore;
     private javax.swing.JPanel jPanel1;
 
+    private final MatchFrame matchFrame;
+    private final ClientConnection connection;
+    private final int myColor;
     private BoardPanel boardPanel;
     private Board currentBoard;
+    private Dices dices;
     private int selectedCell = -1;
 
-    public Mainframe() {
-        //тестовая доска с начальной расстановкой для проверки отображения
-        currentBoard = new Board();
+    public Mainframe(MatchFrame matchFrame, ClientConnection connection, int myColor, Board initialBoard, Dices initialDices) {
+        this.matchFrame = matchFrame;
+        this.connection = connection;
+        this.myColor = myColor;
+        this.currentBoard = initialBoard;
+        this.dices = initialDices;
 
         initComponents();
         initMouseListener();
+
     }
+
+//    public Mainframe() {
+//        //тестовая доска с начальной расстановкой для проверки отображения
+//        currentBoard = new Board();
+//
+//        initComponents();
+//        initMouseListener();
+//    }
 
     private void initComponents() {
         jPanel1 = new javax.swing.JPanel();
-
         boardPanel = new BoardPanel(currentBoard);
 
         jButtonRoll = new javax.swing.JButton();
@@ -48,9 +67,7 @@ public class Mainframe extends javax.swing.JFrame {
         jLabelOneDice = new javax.swing.JLabel();
         jLabelTwoDice = new javax.swing.JLabel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setResizable(false);
-
+        setLayout(new java.awt.BorderLayout());
         jPanel1.setBackground(new java.awt.Color(128, 110, 99));
 
         jButtonRoll.setBackground(new java.awt.Color(171, 139, 119));
@@ -60,7 +77,6 @@ public class Mainframe extends javax.swing.JFrame {
 
         jLabelWhite.setFont(new java.awt.Font("SimSun-ExtB", 1, 14));
         jLabelWhite.setText("White");
-
         jLabelBlack.setFont(new java.awt.Font("SimSun-ExtB", 1, 14));
         jLabelBlack.setText("Black");
 
@@ -70,6 +86,7 @@ public class Mainframe extends javax.swing.JFrame {
         jLabelOneDice.setFont(new java.awt.Font("SimSun-ExtB", 1, 24));
         jLabelTwoDice.setFont(new java.awt.Font("SimSun-ExtB", 1, 24));
 
+        // Восстановленная и адаптированная верстка GroupLayout под IntelliJ IDEA
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -102,14 +119,13 @@ public class Mainframe extends javax.swing.JFrame {
                 jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(boardPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(12, 12, 12)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(jPanel1Layout.createSequentialGroup()
-                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                                        .addComponent(jButtonRoll)
-                                                        .addComponent(jLabelDice)
-                                                        .addComponent(jLabelOneDice, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                        .addComponent(jLabelTwoDice, javax.swing.GroupLayout.DEFAULT_SIZE, 33, Short.MAX_VALUE)))
+                                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                .addComponent(jButtonRoll)
+                                                .addComponent(jLabelDice)
+                                                .addComponent(jLabelOneDice, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(jLabelTwoDice, javax.swing.GroupLayout.DEFAULT_SIZE, 33, Short.MAX_VALUE))
                                         .addGroup(jPanel1Layout.createSequentialGroup()
                                                 .addGap(3, 3, 3)
                                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -122,13 +138,7 @@ public class Mainframe extends javax.swing.JFrame {
                                 .addGap(9, 9, 9))
         );
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
-        layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
-
-        pack();
-        setLocationRelativeTo(null);
+        add(jPanel1, java.awt.BorderLayout.CENTER);
     }
 
     //обработка кликов по доске
@@ -150,18 +160,24 @@ public class Mainframe extends javax.swing.JFrame {
                 }
 
                 System.out.println("Cell selection: " + clickedCell);
-                onSlotSelected(clickedCell);
+                try {
+                    onSlotSelected(clickedCell);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
     }
 
     //выбор фишки
-    private void onSlotSelected(int cellId) {
+    private void onSlotSelected(int cellId) throws IOException {
         if (selectedCell == -1) {
             Cell cell = currentBoard.getCell(cellId);
 
             if (!cell.isEmpty()) {
                 selectedCell = cellId;
+
+                //List<Integer> possibleMoves
 
                 List<Integer> testMoves = new ArrayList<>();
                 testMoves.add((cellId + 3) % 24);
@@ -173,7 +189,9 @@ public class Mainframe extends javax.swing.JFrame {
         } else {
             System.out.println("Move from cell " + selectedCell + " to cell " + cellId);
 
-            //connector.sendMessage(new Message(Commands.MAKE_MOVE, new int[]{selectedSlot, slotId}));
+            //connection.sendMessage(new Message(Commands.MAKE_MOVE, new int[]{selectedSlot, slotId}));
+            int[] moveCoords = new int[]{selectedCell, cellId};
+            connection.sendMessage(new Message(Commands.MAKE_MOVE, moveCoords));
 
             selectedCell = -1;
             boardPanel.setHighlightedSlots(new ArrayList<>());
@@ -181,7 +199,47 @@ public class Mainframe extends javax.swing.JFrame {
         }
     }
 
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(() -> new Mainframe().setVisible(true));
+//    public static void main(String args[]) {
+//        java.awt.EventQueue.invokeLater(() -> new Mainframe().setVisible(true));
+//    }
+
+    //roll
+    private void initGameActions() {
+        jButtonRoll.addActionListener(e -> {
+            System.out.println("Requesting a dice roll from the server...");
+
+            try {
+                connection.sendMessage(new Message(Commands.DICE_ROLL, null));
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
+
+
+    public void refreshGameState(Board newBoard, Dices newDices, int currentTurnColor) {
+        this.currentBoard = newBoard;
+        this.dices = newDices;
+
+        // Передаем новую доску в холст и приказываем перерисовать PNG фишки
+        // boardPanel.setBoard(newBoard); // добавь сеттер в BoardPanel, если нужно, или просто boardPanel.repaint()
+        boardPanel.repaint();
+
+        updateDicesUI(newDices);
+
+        boolean isMyTurn = (currentTurnColor == myColor);
+        jButtonRoll.setEnabled(isMyTurn && !newDices.isRolled());
+    }
+
+
+    private void updateDicesUI(Dices dices) {
+        if (dices != null && dices.isRolled()) {
+            jLabelOneDice.setText(String.valueOf(dices.getDiceOne()));
+            jLabelTwoDice.setText(String.valueOf(dices.getDiceTwo()));
+        } else {
+            jLabelOneDice.setText("-");
+            jLabelTwoDice.setText("-");
+        }
+    }
+
 }
