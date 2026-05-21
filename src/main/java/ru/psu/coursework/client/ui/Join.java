@@ -2,26 +2,28 @@ package ru.psu.coursework.client.ui;
 
 import ru.psu.coursework.additional.messaging.Commands;
 import ru.psu.coursework.additional.messaging.Message;
+import ru.psu.coursework.client.network.ClientConnection;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 
 public class Join extends javax.swing.JPanel {
 
     private final MatchFrame frame; // Ссылка на главное окно навигации
-
+    private final ClientConnection connection;
     private javax.swing.JButton jButtonCancel;
     private javax.swing.JButton jButtonJoin;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JTextField jTextField2;
 
-    //private ClientConnector connector;
 
-    public Join(MatchFrame frame) {
+    public Join(MatchFrame frame, ClientConnection connection) {
         this.frame = frame;
+        this.connection = connection;
         initComponents();
         initNavigationActions();
     }
@@ -88,7 +90,7 @@ public class Join extends javax.swing.JPanel {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Joining canceled. Returning to main menu.");
 
-                frame.showPanel(new MenuPanel(frame));
+                frame.showPanel(new MenuPanel(frame, connection));
             }
         });
 
@@ -106,7 +108,11 @@ public class Join extends javax.swing.JPanel {
                 Message joinMsg = new Message(Commands.JOIN_ROOM, roomCode);
                 System.out.println("Sending a request to JOIN room with code: " + roomCode);
 
-                //connector.sendMessage(joinMsg);
+                try {
+                    connection.sendMessage(joinMsg);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
     }

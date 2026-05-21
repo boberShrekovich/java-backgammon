@@ -2,6 +2,7 @@ package ru.psu.coursework.client.ui;
 
 import ru.psu.coursework.additional.messaging.Commands;
 import ru.psu.coursework.additional.messaging.Message;
+import ru.psu.coursework.client.network.ClientConnection;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -20,17 +21,16 @@ public class MenuPanel extends javax.swing.JPanel {
     private javax.swing.JMenuItem jMenuItemLogout;
     private javax.swing.JMenu jMenuSettings;
     private javax.swing.JPanel jPanel1;
+    private ClientConnection connection;
 
-    //private ClientConnector connector;
-
-    public MenuPanel(MatchFrame frame) {
+    public MenuPanel(MatchFrame frame, ClientConnection connection) {
         this.frame = frame;
+        this.connection = connection;
         initComponents();
         initNavigationActions();
     }
 
     private void initComponents() {
-
         jPanel1 = new javax.swing.JPanel();
         jButtonCreateGame = new javax.swing.JButton();
         jButtonJoin = new javax.swing.JButton();
@@ -112,14 +112,14 @@ public class MenuPanel extends javax.swing.JPanel {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Logging out... Returning to login window.");
 
-                frame.showPanel(new Login(frame));
+                frame.showPanel(new Login(frame, connection));
             }
         });
 
         jButtonCreateGame.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                frame.showPanel(new Create(frame));
+                frame.showPanel(new Create(frame, connection));
             }
         });
 
@@ -127,7 +127,7 @@ public class MenuPanel extends javax.swing.JPanel {
         jButtonJoin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                frame.showPanel(new Join(frame));
+                frame.showPanel(new Join(frame, connection));
             }
         });
     }

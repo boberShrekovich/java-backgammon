@@ -59,7 +59,9 @@ public class ClientConnection implements Runnable {
     private void processMessage(Message message) {
         SwingUtilities.invokeLater(() -> {
             if (message.getCommand() == Commands.AUTHENTICATION_SUCCESS) {
-                frame.showPanel(new MenuPanel(frame));
+                String name = (String) message.getData();
+
+                frame.showPanel(new MenuPanel(frame, this));
 
             } else if (message.getCommand() == Commands.CREATE_ROOM) {
                 String createdCode = (String) message.getData();

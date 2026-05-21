@@ -2,15 +2,17 @@ package ru.psu.coursework.client.ui;
 
 import ru.psu.coursework.additional.messaging.Commands;
 import ru.psu.coursework.additional.messaging.Message;
+import ru.psu.coursework.client.network.ClientConnection;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class Create extends javax.swing.JPanel {
 
     private final MatchFrame frame; // Ссылка на главное окно навигации
-
+    private final ClientConnection connection;
     private javax.swing.JButton jButtonCancel;
     private javax.swing.JButton jButtonCreate;
     private javax.swing.JLabel jLabel1;
@@ -19,8 +21,9 @@ public class Create extends javax.swing.JPanel {
 
     //private ClientConnector connector;
 
-    public Create(MatchFrame frame) {
+    public Create(MatchFrame frame, ClientConnection connection) {
         this.frame = frame;
+        this.connection = connection;
         initComponents();
         initNavigationActions();
     }
@@ -91,7 +94,7 @@ public class Create extends javax.swing.JPanel {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Creation canceled. Returning to main menu.");
 
-                frame.showPanel(new MenuPanel(frame));
+                frame.showPanel(new MenuPanel(frame, connection));
             }
         });
 
@@ -109,7 +112,11 @@ public class Create extends javax.swing.JPanel {
                 Message createMsg = new Message(Commands.CREATE_ROOM, roomCode);
                 System.out.println("Sending a request to CREATE a room with code: " + roomCode);
 
-                //connector.sendMessage(createMsg);
+                try {
+                    connection.sendMessage(createMsg);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
     }

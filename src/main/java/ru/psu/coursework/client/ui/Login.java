@@ -1,15 +1,26 @@
 package ru.psu.coursework.client.ui;
 
+import ru.psu.coursework.additional.messaging.Commands;
+import ru.psu.coursework.additional.messaging.Message;
+import ru.psu.coursework.client.network.ClientConnection;
+
+import javax.swing.*;
+import java.io.IOException;
+
 public class Login extends javax.swing.JPanel {
 
     /**
      * Creates new form Login
      */
 
-    public Login(MatchFrame frame) {
+    private final ClientConnection connection;
+
+    public Login(MatchFrame frame, ClientConnection connection) {
         this.frame = frame;
+        this.connection = connection;
         initComponents();
         initNavigationActions();
+        initNetworkActions();
     }
 
     /**
@@ -118,7 +129,32 @@ public class Login extends javax.swing.JPanel {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
 
-                frame.showPanel(new Registration(frame));
+                frame.showPanel(new Registration(frame, connection));
+            }
+        });
+    }
+
+    //отправка данных
+    private void initNetworkActions() {
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                String username = jTextField1.getText().trim();
+                String password = jTextField2.getText().trim();
+
+                if (username.isEmpty() || password.isEmpty()) {
+                    JOptionPane.showMessageDialog(Login.this, "Заполните все поля!");
+                    return;
+                }
+
+                String[] credentials = new String[] { username, password };
+                Message loginMsg = new Message(Commands.LOGIN_REQUEST, credentials);
+
+                try {
+                    connection.sendMessage(loginMsg);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
     }

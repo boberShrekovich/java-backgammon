@@ -2,13 +2,16 @@ package ru.psu.coursework.client.ui;
 
 import ru.psu.coursework.additional.messaging.Commands;
 import ru.psu.coursework.additional.messaging.Message;
+import ru.psu.coursework.client.network.ClientConnection;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class Registration extends javax.swing.JPanel {
 
+    private final ClientConnection connection;
     private final MatchFrame frame;
     private javax.swing.JButton jButtonCancel;
     private javax.swing.JButton jButtonSignUp;
@@ -25,8 +28,9 @@ public class Registration extends javax.swing.JPanel {
 //        initNetworkActions();
 //    }s
 
-    public Registration(MatchFrame frame) {
-        this.frame = frame; // Сохраняем ссылку на окно
+    public Registration(MatchFrame frame, ClientConnection connection) {
+        this.frame = frame;
+        this.connection = connection;
         initComponents();
         initNetworkActions();
     }
@@ -129,7 +133,11 @@ public class Registration extends javax.swing.JPanel {
                 System.out.println("Sending a registration request to the server for: " + username);
 
 
-                //connector.sendMessage(regMsg);
+                try {
+                    connection.sendMessage(regMsg);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
@@ -138,7 +146,7 @@ public class Registration extends javax.swing.JPanel {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Registration canceled. Returning to login screen.");
 
-                frame.showPanel(new Login(frame));
+                frame.showPanel(new Login(frame, connection));
             }
         });
     }
