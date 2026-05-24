@@ -136,7 +136,29 @@ public class ClientConnection implements Runnable {
                 }
 
             } else if (message.getCommand() == Commands.ERROR) {
-                JOptionPane.showMessageDialog(frame, message.getErrorMessage(), "Server Error!!!", JOptionPane.ERROR_MESSAGE);
+                //JOptionPane.showMessageDialog(frame, message.getErrorMessage(), "Server Error!!!", JOptionPane.ERROR_MESSAGE);
+                String errorMsg = message.getErrorMessage();
+
+                String windowTitle = "Server Error!!!";
+                int messageType = JOptionPane.ERROR_MESSAGE;
+
+                if (errorMsg != null && errorMsg.contains("Game over")) {
+                    windowTitle = "Game Over 🏆";
+                    messageType = JOptionPane.INFORMATION_MESSAGE;
+                }
+
+                JOptionPane.showMessageDialog(frame, errorMsg, windowTitle, messageType);
+
+                if (errorMsg != null && errorMsg.contains("Game over")) {
+                    System.out.println("CLIENT: Game over. Returning user to the main lobby menu");
+
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        frame.setSize(840, 660);
+                        frame.setLocationRelativeTo(null);
+                        frame.showPanel(new MenuPanel(frame, this));
+                    });
+                }
+
 
             } else if (message.getCommand() == Commands.REGISTRATION_REQUEST) {
                 String result = (String) message.getData();
