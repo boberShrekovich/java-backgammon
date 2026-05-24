@@ -63,23 +63,77 @@ public class Room {
         }
 
         if (currentTurnColor == Cell.WHITE && player != white) {
-            player.send(new Message(Commands.GAME_START, "It's not your move now!"));
+            player.send(new Message(Commands.ERROR, "It's not your move now!"));
 
             return;
         }
 
         if (currentTurnColor == Cell.BLACK && player != black) {
-            player.send(new Message(Commands.GAME_START, "It's not your move now!"));
+            player.send(new Message(Commands.ERROR, "It's not your move now!"));
 
             return;
         }
 
-        int diceValue = (to - from + 24) % 24;
+        //int diceValue = (to - from + 24) % 24;
+        int diceValue = -1;
+        if (to == -1) {
+            int exactNeed;
+            if (currentTurnColor == Cell.WHITE)
+                exactNeed = 24 - from;
+            else
+                exactNeed = 12 - from;
 
-        if (!dices.getAvailableValues().contains(diceValue)) {
-            player.send(new Message(Commands.ERROR, "You don't have a dice with value " + diceValue + "!"));
-            return;
+            if (dices.getAvailableValues().contains(exactNeed)) {
+                diceValue = exactNeed;
+            } else {
+                for (int availableDice : dices.getAvailableValues()) {
+                    if (availableDice > exactNeed) {
+                        boolean hasOlderPieces = false;
+
+                        if (currentTurnColor == Cell.WHITE) {
+                            for (int i = 18; i < from; i++) {
+                                Cell checkCell = board.getCell(i);
+                                if (checkCell != null && !checkCell.isEmpty() && checkCell.getColor() == Cell.WHITE) {
+                                    hasOlderPieces = true;
+                                    break;
+                                }
+                            }
+                        } else {
+                            for (int i = 6; i < from; i++) {
+                                Cell checkCell = board.getCell(i);
+                                if (checkCell != null && !checkCell.isEmpty() && checkCell.getColor() == Cell.BLACK) {
+                                    hasOlderPieces = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!hasOlderPieces) {
+                            diceValue = availableDice;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (diceValue == -1) {
+                player.send(new Message(Commands.ERROR, "You don't have a matching dice for this bear off!"));
+                return;
+            }
+        } else {
+            diceValue = (to - from + 24) % 24;
+
+            if (!dices.getAvailableValues().contains(diceValue)) {
+                player.send(new Message(Commands.ERROR, "You don't have a dice with value " + diceValue + "!"));
+                return;
+            }
+
         }
+
+//        if (!dices.getAvailableValues().contains(diceValue)) {
+//            player.send(new Message(Commands.ERROR, "You don't have a dice with value " + diceValue + "!"));
+//            return;
+//        }
 
         //доступное значение
 
@@ -99,7 +153,20 @@ public class Room {
             return;
         }
 
-        validator.move(board, from, to);
+        //validator.move(board, from, to);
+        if (to == -1) {
+            Cell targetCell = board.getCell(from);
+//            targetCell.setCount(targetCell.getCount() - 1);
+//            if (targetCell.getCount() == 0)
+//                targetCell.removePiece();
+            targetCell.removePiece(); // ИСПРАВЛЕНО: метод сам уменьшит count и сотрет цвет при 0!
+            System.out.println("SERVER: The piece has been successfully removed from cell " + from);
+
+            System.out.println("SERVER: The " + currentTurnColor + " piece has been successfully removed from the board!");
+        } else {
+            validator.move(board, from, to);
+        }
+
         dices.takeDice(diceValue);
 
         boolean isFromHead = (currentTurnColor == Cell.WHITE && from == 0) || (currentTurnColor == Cell.BLACK && from == 12);

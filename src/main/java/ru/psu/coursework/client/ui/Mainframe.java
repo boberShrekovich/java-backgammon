@@ -18,6 +18,7 @@ import java.util.List;
 public class Mainframe extends javax.swing.JPanel {
 
     private javax.swing.JButton jButtonRoll;
+    private javax.swing.JButton jButtonBearOff;
     private javax.swing.JLabel jLabelBlack;
     private javax.swing.JLabel jLabelBlackScore;
     private javax.swing.JLabel jLabelDice;
@@ -65,6 +66,7 @@ public class Mainframe extends javax.swing.JPanel {
         boardPanel = new BoardPanel(currentBoard);
 
         jButtonRoll = new javax.swing.JButton();
+        jButtonBearOff = new javax.swing.JButton();
         jLabelWhite = new javax.swing.JLabel();
         jLabelBlack = new javax.swing.JLabel();
         jLabelDice = new javax.swing.JLabel();
@@ -81,6 +83,12 @@ public class Mainframe extends javax.swing.JPanel {
         jButtonRoll.setForeground(new java.awt.Color(86, 57, 39));
         jButtonRoll.setText("Roll");
 
+        jButtonBearOff.setBackground(new java.awt.Color(171, 139, 119));
+        jButtonBearOff.setFont(new java.awt.Font("SimSun-ExtB", 1, 14));
+        jButtonBearOff.setForeground(new java.awt.Color(86, 57, 39));
+        jButtonBearOff.setText("Bear off");
+        jButtonBearOff.setEnabled(false);
+
         jLabelWhite.setFont(new java.awt.Font("SimSun-ExtB", 1, 14));
         jLabelWhite.setText("White");
         jLabelBlack.setFont(new java.awt.Font("SimSun-ExtB", 1, 14));
@@ -89,17 +97,21 @@ public class Mainframe extends javax.swing.JPanel {
         jLabelDice.setFont(new java.awt.Font("SimSun-ExtB", 1, 18));
         jLabelDice.setText("Dice:");
 
+        jLabelWhiteScore.setFont(new java.awt.Font("SimSun-ExtB", 1, 14));
+        jLabelBlackScore.setFont(new java.awt.Font("SimSun-ExtB", 1, 14));
+
         jLabelOneDice.setFont(new java.awt.Font("SimSun-ExtB", 1, 24));
         jLabelTwoDice.setFont(new java.awt.Font("SimSun-ExtB", 1, 24));
 
-        // Восстановленная и адаптированная верстка GroupLayout под IntelliJ IDEA
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
                 jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(boardPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(204, 204, 204)
+                                .addGap(71, 71, 71)
+                                .addComponent(jButtonBearOff) // Кнопка Bear off теперь на своем месте
+                                .addGap(39, 39, 39)
                                 .addComponent(jButtonRoll)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -121,6 +133,7 @@ public class Mainframe extends javax.swing.JPanel {
                                 .addComponent(jLabelTwoDice, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(165, 165, 165))
         );
+
         jPanel1Layout.setVerticalGroup(
                 jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(jPanel1Layout.createSequentialGroup()
@@ -129,6 +142,7 @@ public class Mainframe extends javax.swing.JPanel {
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                                 .addComponent(jButtonRoll)
+                                                .addComponent(jButtonBearOff, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                 .addComponent(jLabelDice)
                                                 .addComponent(jLabelOneDice, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                 .addComponent(jLabelTwoDice, javax.swing.GroupLayout.DEFAULT_SIZE, 33, Short.MAX_VALUE))
@@ -143,7 +157,6 @@ public class Mainframe extends javax.swing.JPanel {
                                                         .addComponent(jLabelBlackScore, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                                 .addGap(9, 9, 9))
         );
-
         add(jPanel1, java.awt.BorderLayout.CENTER);
     }
 
@@ -200,6 +213,13 @@ public class Mainframe extends javax.swing.JPanel {
                         false, false, dices.isDouble, 0, dices.getAvailableValues()
                 );
 
+                if (validMoves.contains(-1)) {
+                    jButtonBearOff.setEnabled(true);
+                    System.out.println("CLIENT: This piece can be discarded behind the board");
+                } else {
+                    jButtonBearOff.setEnabled(false);
+                }
+
 //                List<Integer> testMoves = new ArrayList<>();
 //                testMoves.add((cellId + 3) % 24);
 //                testMoves.add((cellId + 5) % 24);
@@ -210,14 +230,21 @@ public class Mainframe extends javax.swing.JPanel {
         } else {
             System.out.println("Move from cell " + selectedCell + " to cell " + cellId);
 
-            //connection.sendMessage(new Message(Commands.MAKE_MOVE, new int[]{selectedSlot, slotId}));
-            int[] moveCoords = new int[]{selectedCell, cellId};
-            connection.sendMessage(new Message(Commands.MAKE_MOVE, moveCoords));
-
-            selectedCell = -1;
-            boardPanel.setHighlightedSlots(new ArrayList<>());
-            boardPanel.repaint();
+            sendMoveToServer(selectedCell, cellId);
         }
+    }
+
+    private void sendMoveToServer(int from, int to) {
+        int[] moveCoords = new int[]{from, to};
+        try {
+            connection.sendMessage(new Message(Commands.MAKE_MOVE, moveCoords));
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        selectedCell = -1;
+        jButtonBearOff.setEnabled(false);
+        boardPanel.setHighlightedSlots(new ArrayList<>());
+        boardPanel.repaint();
     }
 
 //    public static void main(String args[]) {
@@ -235,6 +262,14 @@ public class Mainframe extends javax.swing.JPanel {
                 throw new RuntimeException(ex);
             }
         });
+
+        jButtonBearOff.addActionListener(e -> {
+            if (selectedCell != -1) {
+                System.out.println("КЛИЕНТ: Игрок выбрал СБРОС фишки из лунки " + selectedCell);
+
+                sendMoveToServer(selectedCell, -1);
+            }
+        });
     }
 
 
@@ -248,6 +283,33 @@ public class Mainframe extends javax.swing.JPanel {
         }
 
 //        boardPanel.repaint();
+
+        //
+        int whitePiecesOnBoard = 0;
+        int blackPiecesOnBoard = 0;
+
+        for (int i = 0; i < 24; i++) {
+            Cell cell = newBoard.getCell(i);
+            if (cell != null && !cell.isEmpty()) {
+                if (cell.getColor() == ru.psu.coursework.additional.models.Cell.WHITE) {
+                    whitePiecesOnBoard += cell.getCount();
+                } else if (cell.getColor() == ru.psu.coursework.additional.models.Cell.BLACK) {
+                    blackPiecesOnBoard += cell.getCount();
+                }
+            }
+        }
+
+        int whiteScore = 15 - whitePiecesOnBoard;
+        int blackScore = 15 - blackPiecesOnBoard;
+
+        if (jLabelWhiteScore != null)
+            jLabelWhiteScore.setText(String.valueOf(whiteScore));
+
+        if (jLabelBlackScore != null)
+            jLabelBlackScore.setText(String.valueOf(blackScore));
+
+        //
+
 
         if (newDices != null) {
             System.out.println("CLIENT INTERFACE: Cubes arrived from the network: "
@@ -270,6 +332,11 @@ public class Mainframe extends javax.swing.JPanel {
 
     private void updateDicesUI(Dices dices) {
         if (dices != null && dices.getDiceOne() > 0 && dices.getDiceTwo() > 0) {
+            if (jLabelOneDice == null || jLabelTwoDice == null) {
+                System.err.println("UI ERROR: Cube text labels are null!");
+                return;
+            }
+
             jLabelOneDice.setText(String.valueOf(dices.getDiceOne()));
             jLabelTwoDice.setText(String.valueOf(dices.getDiceTwo()));
             System.out.println("The interface displayed dices: " + dices.getDiceOne() + " : " + dices.getDiceTwo());

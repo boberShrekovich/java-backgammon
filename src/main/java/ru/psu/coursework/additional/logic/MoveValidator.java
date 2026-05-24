@@ -11,6 +11,23 @@ public class MoveValidator {
 
     public boolean canMove(Board board, int from, int to, int playersColor, boolean headMoveDone, int diceValue,
                            boolean isFirstGameMove, boolean isDouble, int headPiecesTaken) {
+        if (to == -1) {
+            for (int i = 0; i < 24; i++) {
+                Cell cell = board.getCell(i);
+                if (cell != null && !cell.isEmpty() && cell.getColor() == playersColor) {
+                    if (playersColor == Cell.WHITE && i < 18)
+                        return false;
+                    if (playersColor == Cell.BLACK && (i < 6 || i > 11))
+                        return false;
+                }
+            }
+
+            if (playersColor == Cell.WHITE && (from + diceValue < 24)) return false;
+            if (playersColor == Cell.BLACK && (from + diceValue < 12)) return false;
+
+            return true;
+        }
+
         if (from < 0 || to < 0 || from >= 24 || to >= 24) return false;
 
         if (!isDiceValueMatching(from, to, diceValue, playersColor)) return false;
