@@ -5,21 +5,18 @@ import ru.psu.coursework.additional.messaging.Message;
 import ru.psu.coursework.client.network.ClientConnection;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 
 public class Create extends javax.swing.JPanel {
 
-    private final MatchFrame frame; // Ссылка на главное окно навигации
+    private final MatchFrame frame;
     private final ClientConnection connection;
-    private javax.swing.JButton jButtonCancel;
-    private javax.swing.JButton jButtonCreate;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JTextField jTextField1;
-
-    //private ClientConnector connector;
+    private JTextField jTextField1;
+    private JButton jButtonCreate;
+    private JButton jButtonCancel;
 
     public Create(MatchFrame frame, ClientConnection connection) {
         this.frame = frame;
@@ -28,64 +25,47 @@ public class Create extends javax.swing.JPanel {
         initNavigationActions();
     }
 
-
     private void initComponents() {
+        setPreferredSize(new Dimension(400, 300));
+        setBackground(new java.awt.Color(128, 110, 99));
 
-        jPanel1 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
-        jButtonCreate = new javax.swing.JButton();
-        jButtonCancel = new javax.swing.JButton();
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 20, 10, 20); // Отступы между элементами
 
-        setLayout(new java.awt.BorderLayout());
+        JLabel jLabel1 = new JLabel("Create code for the game:");
+        jLabel1.setFont(new java.awt.Font("SimSun-ExtB", Font.BOLD, 14));
+        jLabel1.setForeground(Color.BLACK);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        add(jLabel1, gbc);
 
-        jPanel1.setBackground(new java.awt.Color(128, 110, 99));
+        jTextField1 = new JTextField();
+        jTextField1.setPreferredSize(new Dimension(200, 30));
+        gbc.gridy = 1;
+        add(jTextField1, gbc);
 
-        jLabel1.setFont(new java.awt.Font("SimSun-ExtB", 1, 14));
-        jLabel1.setText("Create code for the game: ");
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        buttonPanel.setOpaque(false);
 
+        jButtonCreate = new JButton("Create");
         jButtonCreate.setBackground(new java.awt.Color(171, 139, 119));
-        jButtonCreate.setFont(new java.awt.Font("SimSun-ExtB", 0, 14));
+        jButtonCreate.setFont(new java.awt.Font("SimSun-ExtB", Font.PLAIN, 14));
         jButtonCreate.setForeground(new java.awt.Color(86, 57, 39));
-        jButtonCreate.setText("Create");
 
+        jButtonCancel = new JButton("Cancel");
         jButtonCancel.setBackground(new java.awt.Color(171, 139, 119));
-        jButtonCancel.setFont(new java.awt.Font("SimSun-ExtB", 0, 14));
+        jButtonCancel.setFont(new java.awt.Font("SimSun-ExtB", Font.PLAIN, 14));
         jButtonCancel.setForeground(new java.awt.Color(86, 57, 39));
-        jButtonCancel.setText("Cancel");
 
+        buttonPanel.add(jButtonCreate);
+        buttonPanel.add(jButtonCancel);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addContainerGap(102, Short.MAX_VALUE)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                                .addGroup(jPanel1Layout.createSequentialGroup()
-                                                        .addComponent(jButtonCreate)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                        .addComponent(jButtonCancel))
-                                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addComponent(jLabel1))
-                                .addGap(95, 95, 95))
-        );
-        jPanel1Layout.setVerticalGroup(
-                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(83, 83, 83)
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(35, 35, 35)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jButtonCreate)
-                                        .addComponent(jButtonCancel))
-                                .addContainerGap(119, Short.MAX_VALUE))
-        );
-
-        add(jPanel1, java.awt.BorderLayout.CENTER);
+        gbc.gridy = 2;
+        gbc.insets = new Insets(20, 20, 10, 20); // Чуть увеличиваем отступ сверху для кнопок
+        add(buttonPanel, gbc);
     }
 
     private void initNavigationActions() {
@@ -94,6 +74,8 @@ public class Create extends javax.swing.JPanel {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Creation canceled. Returning to main menu.");
 
+                frame.setSize(840, 660);
+                frame.setLocationRelativeTo(null);
                 frame.showPanel(new MenuPanel(frame, connection));
             }
         });
@@ -102,16 +84,22 @@ public class Create extends javax.swing.JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String roomCode = jTextField1.getText().trim();
-
                 if (roomCode.isEmpty()) {
                     JOptionPane.showMessageDialog(Create.this,
                             "Please enter a room code!", "Warning", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
-                Message createMsg = new Message(Commands.CREATE_ROOM, roomCode);
-                System.out.println("Sending a request to CREATE a room with code: " + roomCode);
+                JOptionPane.showMessageDialog(frame,
+                        "Waiting for an opponent...",
+                        "Room " + roomCode,
+                        JOptionPane.INFORMATION_MESSAGE);
 
+                Message createMsg = new Message(Commands.CREATE_ROOM, roomCode);
+                createMsg.setCommand(Commands.CREATE_ROOM);
+                createMsg.setData(roomCode);
+
+                System.out.println("Sending a request to CREATE a room with code: " + roomCode);
                 try {
                     connection.sendMessage(createMsg);
                 } catch (IOException ex) {

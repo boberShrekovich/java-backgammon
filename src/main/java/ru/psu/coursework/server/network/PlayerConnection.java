@@ -2,6 +2,8 @@ package ru.psu.coursework.server.network;
 
 import ru.psu.coursework.additional.messaging.Commands;
 import ru.psu.coursework.additional.messaging.Message;
+import ru.psu.coursework.additional.models.Cell;
+import ru.psu.coursework.additional.models.Dices;
 import ru.psu.coursework.server.database.DatabaseManager;
 
 import java.io.*;
@@ -45,7 +47,8 @@ public class PlayerConnection implements Runnable {
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } catch (Exception e) {
-            System.err.println();
+            System.err.println("Critical error while processing message: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             closeConnection();
         }
@@ -68,18 +71,38 @@ public class PlayerConnection implements Runnable {
             }
 
         } else if (message.getCommand() == Commands.LOGIN_REQUEST) {
+//            System.out.println("LOGIN_REQUEST received");
+//            System.out.println("Message data: " + message.getData());
+
             String[] credentials = (String[]) message.getData();
+
+//            if (credentials == null || credentials.length < 2) {
+//                System.out.println("ERROR: Invalid credentials array");
+//                send(new Message(Commands.ERROR, "Invalid login data"));
+//                return;
+//            }
+//            //
             String loginName = credentials[0];
             String password = credentials[1];
+
+
+//            System.out.println("Login: '" + loginName + "', Password: '" + password + "'");
 
             boolean isAuthOk = database.loginUser(loginName, password);
 
             if (isAuthOk) {
+                System.out.println("loginName from client: '" + loginName + "'");
+
                 this.username = loginName;
 
                 lobby.addPlayer(this);
 
-                send(new Message(Commands.AUTHENTICATION_SUCCESS, loginName));
+                Message successMsg = new Message();
+                successMsg.setCommand(Commands.AUTHENTICATION_SUCCESS);
+                successMsg.setData(loginName);
+                send(successMsg);
+
+//                send(new Message(Commands.AUTHENTICATION_SUCCESS, loginName));
                 System.out.println("User authenticated: " + loginName);
 
             } else {
@@ -103,6 +126,47 @@ public class PlayerConnection implements Runnable {
             System.out.println("Warning: Received outbound-only command from client!!!");
 
         } else if (message.getCommand() == Commands.DICE_ROLL) {
+            Room room = this.getCurrentRoom();
+            if (room != null) {
+
+                System.out.println("The server accepted the Roll request from the player: " + this.getUsername());
+                System.out.println("Now the color is moving: " + room.getCurrentTurnColor());
+                System.out.println("White player on the server: " + (room.getWhitePlayer() != null ? room.getWhitePlayer().getUsername() : "null"));
+                System.out.println("Black player on the server: " + (room.getBlackPlayer() != null ? room.getBlackPlayer().getUsername() : "null"));
+
+
+
+                if (room.getCurrentTurnColor() == Cell.WHITE && this != room.getWhitePlayer()) {
+                    send(new Message(Commands.ERROR, "Now it's White's turn! You can't roll the dice!!!"));
+                    return;
+                }
+                if (room.getCurrentTurnColor() == Cell.BLACK && this != room.getBlackPlayer()) {
+                    send(new Message(Commands.ERROR, "Now it's Black's turn! You can't roll the dice!!!"));
+                    return;
+                }
+
+                Dices roomDices = room.getDices();
+                roomDices.roll();
+
+                System.out.println("SERVER GENERATED: " + roomDices.getDiceOne() + " and " + roomDices.getDiceTwo());
+
+                //room.getDices().roll();
+
+                Object[] gameData = new Object[] { room.getBoard(), room.getDices(), room.getCurrentTurnColor() };
+                Message updateMsg = new Message(Commands.UPDATE_BOARD, gameData);
+
+                if (room.getWhitePlayer() != null) {
+                    room.getWhitePlayer().resetSocketCache();
+                    room.getWhitePlayer().send(updateMsg);
+                }
+                if (room.getBlackPlayer() != null) {
+                    room.getWhitePlayer().resetSocketCache();
+                    room.getBlackPlayer().send(updateMsg);
+                }
+
+//                room.getWhitePlayer().send(updateMsg);
+//                room.getBlackPlayer().send(updateMsg);
+            }
 
         } else if (message.getCommand() == Commands.MAKE_MOVE) {
             if (currentRoom != null) {
@@ -140,6 +204,7 @@ public class PlayerConnection implements Runnable {
     public synchronized void send(Message message) {
         try {
             if (out != null && !socket.isClosed()) {
+                out.reset();
                 out.writeObject(message);
                 out.flush();
             }
@@ -162,4 +227,15 @@ public class PlayerConnection implements Runnable {
             e.printStackTrace();
         }
     }
+
+    public synchronized void resetSocketCache() {
+        try {
+            if (out != null && !socket.isClosed()) {
+                out.reset();
+            }
+        } catch (IOException e) {
+            System.err.println("Socket cache flush error: " + e.getMessage());
+        }
+    }
+
 }

@@ -80,4 +80,12 @@ public class Dices implements Serializable {
 
         return available;
     }
+
+    public void clear() {
+        this.diceOne = 0;
+        this.diceTwo = 0;
+        this.diceOneUses = 0;
+        this.diceTwoUses = 0;
+        this.isDouble = false;
+    }
 }

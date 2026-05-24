@@ -1,9 +1,10 @@
 package ru.psu.coursework.additional.models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Board {
+public class Board implements Serializable {
     private static final int COUNT_OF_CELLS = 24;
 
     private final List<Cell> cells;

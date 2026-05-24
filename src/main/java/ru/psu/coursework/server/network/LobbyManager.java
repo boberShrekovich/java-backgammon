@@ -18,6 +18,11 @@ public class LobbyManager {
     }
 
     public synchronized void createRoom(PlayerConnection creator, String roomCode) {
+        if (roomCode == null) {
+            creator.send(new Message(Commands.ERROR, "Room code cannot be empty!"));
+            return;
+        }
+
         String code = roomCode.trim().toUpperCase();
 
         if (activeRooms.containsKey(code)) {
@@ -30,12 +35,20 @@ public class LobbyManager {
 
         activeRooms.put(code, newRoom);
         players.remove(creator);
+        creator.setCurrentRoom(newRoom);
+
 
         creator.send(new Message(Commands.CREATE_ROOM, "The room " + code + " has been successfully created. Waiting for the opponent..."));
         System.out.println("Created the room " + code);
     }
 
     public synchronized void joinRoom(PlayerConnection guest, String roomCode) {
+        if (roomCode == null) {
+            guest.send(new Message(Commands.ERROR, "Room code cannot be empty!"));
+
+            return;
+        }
+
         String code = roomCode.trim().toUpperCase();
         Room room = activeRooms.get(code);
 
@@ -53,6 +66,8 @@ public class LobbyManager {
 
         room.addOpponent(guest);
         players.remove(guest);
+
+        guest.setCurrentRoom(room);
 
         System.out.println("Player " + guest.getUsername() + " joined the room successfully!");
 

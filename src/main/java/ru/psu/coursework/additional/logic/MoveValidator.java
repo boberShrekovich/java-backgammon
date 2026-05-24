@@ -11,17 +11,18 @@ public class MoveValidator {
 
     public boolean canMove(Board board, int from, int to, int playersColor, boolean headMoveDone, int diceValue,
                            boolean isFirstGameMove, boolean isDouble, int headPiecesTaken) {
+        if (from < 0 || to < 0 || from >= 24 || to >= 24) return false;
+
+        if (!isDiceValueMatching(from, to, diceValue, playersColor)) return false;
+
         Cell fromCell = board.getCell(from);
         Cell toCell = board.getCell(to);
-
-        if (from < 0 || to < 0 || from > 24 || to > 24) return false;
 
         if (fromCell.isEmpty() || fromCell.getColor() != playersColor) return false;
 
         if (!toCell.isEmpty() && toCell.getColor() != playersColor) return false;
 
         if (isHeadPosition(from, playersColor) && headMoveDone) {
-
             if (isFirstGameMove){
                 boolean isBlockDouble = (diceValue == 3 || diceValue == 4 || diceValue == 6);
 
@@ -29,6 +30,8 @@ public class MoveValidator {
                     if (headPiecesTaken < 2) return true;
                 }
             }
+
+            return false;
         }
 
 
@@ -41,13 +44,12 @@ public class MoveValidator {
 
     private boolean isHeadPosition(int position, int playersColor) {
         if (playersColor == Cell.WHITE && position == 0) return true;
-        if (playersColor == Cell.BLACK && position == 12) return false;
+        if (playersColor == Cell.BLACK && position == 12) return true;
 
         return false;
     }
 
     private boolean isDiceValueMatching(int from, int to, int diceValue, int playersColor) {
-
         int distance;
 
         if (playersColor == Cell.WHITE)
@@ -57,7 +59,7 @@ public class MoveValidator {
             if (to >= from)
                 distance = to - from;
             else
-                distance = from - to;
+                distance = (24 - from) + to;
 
         } else
             return false;

@@ -15,23 +15,32 @@ public class DatabaseManager {
     public boolean registerUser(String username, String password) {
         String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
 
-        try (Connection connection = getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
 
-            pstmt.setString(1, username);
-            pstmt.setString(2, password);
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, username);
+                pstmt.setString(2, password);
 
-            int rowsAffected = pstmt.executeUpdate();
+                int rowsInserted = pstmt.executeUpdate();
 
-            return rowsAffected > 0;
-
+                if (rowsInserted > 0) {
+                    conn.commit();
+                    return true;
+                }
+            } catch (SQLException e) {
+                conn.rollback();
+                if ("23505".equals(e.getSQLState())) {
+                    System.out.println("Логин занят.");
+                } else {
+                    e.printStackTrace();
+                }
+            }
         } catch (SQLException e) {
-            if ("23505".equals(e.getSQLState()))
-                System.out.println("Login already exists!!!");
-            else e.printStackTrace();
-
-            return false;
+            e.printStackTrace();
         }
+
+        return false;
     }
 
     public boolean loginUser(String username, String password) {

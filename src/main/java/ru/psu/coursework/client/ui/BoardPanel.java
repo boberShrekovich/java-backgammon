@@ -96,4 +96,9 @@ public class BoardPanel extends JPanel implements Serializable {
             }
         }
     }
+
+    public void setBoard(Board newBoard) {
+        this.board = newBoard;
+    }
+
 }

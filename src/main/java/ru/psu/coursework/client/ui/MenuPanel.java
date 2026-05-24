@@ -119,6 +119,8 @@ public class MenuPanel extends javax.swing.JPanel {
         jButtonCreateGame.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                frame.setSize(400, 300);
+                frame.setLocationRelativeTo(null);
                 frame.showPanel(new Create(frame, connection));
             }
         });
@@ -127,6 +129,8 @@ public class MenuPanel extends javax.swing.JPanel {
         jButtonJoin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                frame.setSize(400, 300);
+                frame.setLocationRelativeTo(null);
                 frame.showPanel(new Join(frame, connection));
             }
         });

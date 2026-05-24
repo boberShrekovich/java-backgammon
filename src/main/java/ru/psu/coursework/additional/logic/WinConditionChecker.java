@@ -11,9 +11,9 @@ public class WinConditionChecker {
     private int countTotalPieces(Board board, int playersColor) {
         int total = 0;
 
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 24; i++) {
             Cell cell = board.getCell(i);
-            if (cell.getColor() == playersColor) {
+            if (cell != null && cell.getColor() == playersColor) {
                 total += cell.getCount();
             }
         }

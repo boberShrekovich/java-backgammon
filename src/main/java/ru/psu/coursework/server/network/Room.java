@@ -44,7 +44,7 @@ public class Room {
         this.isGameStarted = true;
         this.currentTurnColor = Cell.WHITE;
 
-        this.dices.roll();
+        //this.dices.roll();
 
         Object[] whiteData = new Object[] { Cell.WHITE, dices, board };
         white.send(new Message(Commands.GAME_START, whiteData));
@@ -57,7 +57,7 @@ public class Room {
 
     public synchronized void operatePlayersMove(PlayerConnection player, int from, int to) {
         if (!isGameStarted) {
-            player.send(new Message(Commands.GAME_START, "The match hasn't started yet!"));
+            player.send(new Message(Commands.ERROR, "The match hasn't started yet!"));
 
             return;
         }
@@ -76,6 +76,11 @@ public class Room {
 
         int diceValue = (to - from + 24) % 24;
 
+        if (!dices.getAvailableValues().contains(diceValue)) {
+            player.send(new Message(Commands.ERROR, "You don't have a dice with value " + diceValue + "!"));
+            return;
+        }
+
         //доступное значение
 
         MoveValidator validator = new MoveValidator();
@@ -89,7 +94,7 @@ public class Room {
                 diceValue, currentFirstMove, isDouble, headPiecesTaken);
 
         if (!canMove) {
-            player.send(new Message(Commands.GAME_START, "This move is impossible!"));
+            player.send(new Message(Commands.ERROR, "This move is impossible!"));
 
             return;
         }
@@ -115,16 +120,28 @@ public class Room {
             return;
         }
 
+        //
+        if (dices.getAvailableValues().isEmpty()) {
+            System.out.println("SERVER: Player is out of dice. Pass the turn!");
+            changeTurn();
+            return;
+        }
+
+
         MoveCalculator calculator = new MoveCalculator();
 
         boolean isRolled = dices.isRolled() && calculator.hasAnyValidMoves(
                 board, currentTurnColor, currentHeadMoveDone, currentFirstMove, isDouble, headPiecesTaken, dices.getAvailableValues()
         );
 
-        if (!isRolled)
+        if (!isRolled) {
+            System.out.println("SERVER: Nowhere to go!");
             changeTurn();
-        else
+        }
+        else {
+            System.out.println("SERVER: There are available moves!");
             broadcastState();
+        }
 
 
     }
@@ -156,7 +173,11 @@ public class Room {
         blackHeadMoveDone = false;
         headPiecesTaken = 0;
 
-        dices.roll();
+        //this.dices = new Dices();
+
+        dices.clear();
+
+        //dices.roll();
 
         broadcastState();
     }
@@ -165,9 +186,26 @@ public class Room {
         Object[] state = new Object[] { board, dices, currentTurnColor };
         Message message = new Message(Commands.UPDATE_BOARD, state);
 
-        white.send(message);
-        black.send(message);
+//        white.send(message);
+//        black.send(message);
+
+        if (white != null) {
+            white.resetSocketCache();
+            white.send(message);
+        }
+        if (black != null) {
+            black.resetSocketCache();
+            black.send(message);
+        }
+
+        System.out.println("The game state has been sent successfully");
     }
+
+    public PlayerConnection getWhitePlayer() { return white; }
+    public PlayerConnection getBlackPlayer() { return black; }
+    public Board getBoard() { return board; }
+    public Dices getDices() { return dices; }
+    public int getCurrentTurnColor() { return currentTurnColor; }
 
 
 }

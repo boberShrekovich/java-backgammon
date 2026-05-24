@@ -1,5 +1,6 @@
 package ru.psu.coursework.client.ui;
 
+import ru.psu.coursework.additional.logic.MoveCalculator;
 import ru.psu.coursework.additional.messaging.Commands;
 import ru.psu.coursework.additional.messaging.Message;
 import ru.psu.coursework.additional.models.Board;
@@ -44,6 +45,11 @@ public class Mainframe extends javax.swing.JPanel {
         initComponents();
         initMouseListener();
 
+        initGameActions();
+
+        updateDicesUI(initialDices);
+
+        jButtonRoll.setEnabled(myColor == ru.psu.coursework.additional.models.Cell.WHITE);
     }
 
 //    public Mainframe() {
@@ -171,20 +177,35 @@ public class Mainframe extends javax.swing.JPanel {
 
     //выбор фишки
     private void onSlotSelected(int cellId) throws IOException {
+        if (dices == null || !dices.isRolled()) {
+            JOptionPane.showMessageDialog(this,
+                    "You must roll the dice!!!",
+                    "The move is blocked", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         if (selectedCell == -1) {
             Cell cell = currentBoard.getCell(cellId);
 
-            if (!cell.isEmpty()) {
+            if (cell != null || !cell.isEmpty()) {
+                if (cell.getColor() != myColor) return;
+
                 selectedCell = cellId;
 
                 //List<Integer> possibleMoves
 
-                List<Integer> testMoves = new ArrayList<>();
-                testMoves.add((cellId + 3) % 24);
-                testMoves.add((cellId + 5) % 24);
+                MoveCalculator calculator = new MoveCalculator();
+                List<Integer> validMoves = calculator.getPossibleMoves(
+                        currentBoard, cellId, myColor,
+                        false, false, dices.isDouble, 0, dices.getAvailableValues()
+                );
 
-                boardPanel.setHighlightedSlots(testMoves); // Передаем зеленые маркеры
-                boardPanel.repaint(); // Заставляем Swing мгновенно перерисовать экран
+//                List<Integer> testMoves = new ArrayList<>();
+//                testMoves.add((cellId + 3) % 24);
+//                testMoves.add((cellId + 5) % 24);
+
+                boardPanel.setHighlightedSlots(validMoves);
+                boardPanel.repaint();
             }
         } else {
             System.out.println("Move from cell " + selectedCell + " to cell " + cellId);
@@ -221,24 +242,42 @@ public class Mainframe extends javax.swing.JPanel {
         this.currentBoard = newBoard;
         this.dices = newDices;
 
-        // Передаем новую доску в холст и приказываем перерисовать PNG фишки
-        // boardPanel.setBoard(newBoard); // добавь сеттер в BoardPanel, если нужно, или просто boardPanel.repaint()
-        boardPanel.repaint();
+        if (boardPanel != null) {
+            boardPanel.setBoard(newBoard);
+            boardPanel.repaint();
+        }
+
+//        boardPanel.repaint();
+
+        if (newDices != null) {
+            System.out.println("CLIENT INTERFACE: Cubes arrived from the network: "
+                    + newDices.getDiceOne() + " and " + newDices.getDiceTwo());
+        }
 
         updateDicesUI(newDices);
 
         boolean isMyTurn = (currentTurnColor == myColor);
-        jButtonRoll.setEnabled(isMyTurn && !newDices.isRolled());
+//        jButtonRoll.setEnabled(isMyTurn && (newDices == null || !newDices.isRolled()));
+        if (!isMyTurn || (newDices != null && newDices.getDiceOne() > 0)) {
+            jButtonRoll.setEnabled(false);
+            System.out.println("CLIENT INTERFACE: Roll button is disabled");
+        } else {
+            jButtonRoll.setEnabled(true);
+            System.out.println("CLIENT INTERFACE: Roll button available for throwing");
+        }
     }
 
 
     private void updateDicesUI(Dices dices) {
-        if (dices != null && dices.isRolled()) {
+        if (dices != null && dices.getDiceOne() > 0 && dices.getDiceTwo() > 0) {
             jLabelOneDice.setText(String.valueOf(dices.getDiceOne()));
             jLabelTwoDice.setText(String.valueOf(dices.getDiceTwo()));
+            System.out.println("The interface displayed dices: " + dices.getDiceOne() + " : " + dices.getDiceTwo());
+            //System.out.println("КЛИЕНТ ИНТЕРФЕЙС: Текст лейблов успешно изменен на цифры!");
         } else {
             jLabelOneDice.setText("-");
             jLabelTwoDice.setText("-");
+            //System.out.println("КЛИЕНТ ИНТЕРФЕЙС: Кубики пустые, отрисованы прочерки.");
         }
     }
 
