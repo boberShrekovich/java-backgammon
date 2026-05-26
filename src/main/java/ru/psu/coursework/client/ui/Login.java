@@ -34,7 +34,7 @@ public class Login extends javax.swing.JPanel {
 
         jPanel1 = new javax.swing.JPanel();
         jTextField1 = new javax.swing.JTextField();
-        jTextField2 = new javax.swing.JTextField();
+        jTextField2 = new javax.swing.JPasswordField();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
@@ -140,7 +140,7 @@ public class Login extends javax.swing.JPanel {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 String username = jTextField1.getText().trim();
-                String password = jTextField2.getText().trim();
+                String password = new String(jTextField2.getPassword()).trim();
 
                 if (username.isEmpty() || password.isEmpty()) {
                     JOptionPane.showMessageDialog(Login.this, "Заполните все поля!");
@@ -167,7 +167,7 @@ public class Login extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
+    private javax.swing.JPasswordField jTextField2;
     private final MatchFrame frame;
     // End of variables declaration//GEN-END:variables
 }
