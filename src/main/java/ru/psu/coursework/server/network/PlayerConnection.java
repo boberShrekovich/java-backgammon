@@ -152,6 +152,28 @@ public class PlayerConnection implements Runnable {
 
                 //room.getDices().roll();
 
+                ru.psu.coursework.additional.logic.MoveCalculator calculator = new ru.psu.coursework.additional.logic.MoveCalculator();
+
+                boolean currentHeadMoveDone = (room.getCurrentTurnColor() == Cell.WHITE) ? room.getWhiteHeadMoveDone() : room.getBlackHeadMoveDone();
+                boolean currentFirstMove = (room.getCurrentTurnColor() == Cell.WHITE) ? room.getWhiteFirstMove() : room.getBlackFirstMove();
+                boolean isDouble = roomDices.getDiceOne() == roomDices.getDiceTwo();
+
+                boolean hasMoves = calculator.hasAnyValidMoves(
+                        room.getBoard(), room.getCurrentTurnColor(), currentHeadMoveDone,
+                        currentFirstMove, isDouble, room.getHeadPiecesTaken(), roomDices.getAvailableValues()
+                );
+
+                if (!hasMoves) {
+                    System.out.println("SERVER: No moves for player " + this.getUsername() + "!!!");
+
+                    this.send(new Message(Commands.ERROR, "You have no available moves! The turn goes to your opponent"));
+                    room.forcePassTurn();
+
+                    return;
+                }
+
+
+
                 Object[] gameData = new Object[] { room.getBoard(), room.getDices(), room.getCurrentTurnColor() };
                 Message updateMsg = new Message(Commands.UPDATE_BOARD, gameData);
 
@@ -160,7 +182,7 @@ public class PlayerConnection implements Runnable {
                     room.getWhitePlayer().send(updateMsg);
                 }
                 if (room.getBlackPlayer() != null) {
-                    room.getWhitePlayer().resetSocketCache();
+                    room.getBlackPlayer().resetSocketCache();
                     room.getBlackPlayer().send(updateMsg);
                 }
 

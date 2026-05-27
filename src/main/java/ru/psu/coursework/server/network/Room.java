@@ -197,12 +197,28 @@ public class Room {
 
         MoveCalculator calculator = new MoveCalculator();
 
-        boolean isRolled = dices.isRolled() && calculator.hasAnyValidMoves(
+//        boolean isRolled = dices.isRolled() && calculator.hasAnyValidMoves(
+//                board, currentTurnColor, currentHeadMoveDone, currentFirstMove, isDouble, headPiecesTaken, dices.getAvailableValues()
+//        );
+//
+//        if (!isRolled) {
+//            System.out.println("SERVER: Nowhere to go!");
+//            changeTurn();
+//        }
+//        else {
+//            System.out.println("SERVER: There are available moves!");
+//            broadcastState();
+//        }
+
+        boolean hasValidMoves = calculator.hasAnyValidMoves(
                 board, currentTurnColor, currentHeadMoveDone, currentFirstMove, isDouble, headPiecesTaken, dices.getAvailableValues()
         );
 
-        if (!isRolled) {
+        if (!hasValidMoves) {
             System.out.println("SERVER: Nowhere to go!");
+
+            player.send(new Message(Commands.ERROR, "It's impossible to move the remaining cubes! The turn passes to the opponent"));
+
             changeTurn();
         }
         else {
@@ -249,6 +265,11 @@ public class Room {
         broadcastState();
     }
 
+    public synchronized void forcePassTurn() {
+        System.out.println("ROOM: Request received to force a move due to a cut");
+        changeTurn();
+    }
+
     private void broadcastState() {
         Object[] state = new Object[] { board, dices, currentTurnColor };
         Message message = new Message(Commands.UPDATE_BOARD, state);
@@ -273,6 +294,11 @@ public class Room {
     public Board getBoard() { return board; }
     public Dices getDices() { return dices; }
     public int getCurrentTurnColor() { return currentTurnColor; }
+    public int getHeadPiecesTaken() { return headPiecesTaken; }
+    public boolean getWhiteFirstMove() { return isWhiteFirstMove; }
+    public boolean getBlackFirstMove() { return isBlackFirstMove; }
+    public boolean getWhiteHeadMoveDone() { return whiteHeadMoveDone; }
+    public boolean getBlackHeadMoveDone() { return blackHeadMoveDone; }
 
 
 }
