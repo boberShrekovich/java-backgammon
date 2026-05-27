@@ -30,6 +30,28 @@ public class MoveValidator {
 
         if (from < 0 || to < 0 || from >= 24 || to >= 24) return false;
 
+        if (playersColor == 1) { //Cell.WHITE
+            if (to <= from) {
+                System.out.println("VALIDATOR: The white chip cannot move backwards or on a second round!");
+
+                return false;
+            }
+        }
+        else if (playersColor == 2) { //Cell.BLACK
+            //12 - 23
+            if (from >= 12 && to >= 12 && to <= from) return false;
+
+            //0 - 11
+            if (from < 12 && to < 12 && to <= from) return false;
+
+            //> 11
+            if (from < 12 && to >= 12) {
+                System.out.println("VALIDATOR: The black chip has reached the finish line in the house and cannot go to the second round!");
+
+                return false;
+            }
+        }
+
         if (!isDiceValueMatching(from, to, diceValue, playersColor)) return false;
 
         Cell fromCell = board.getCell(from);
